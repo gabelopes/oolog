@@ -1,30 +1,28 @@
-:- use_module(platform).
+:- use_module('platform/orchestrator/class_orchestrator').
+:- use_module('platform/orchestrator/instance_orchestrator').
+:- use_module('platform/orchestrator/method_orchestrator').
 
-:- classdef world_greeter(greeting, name) methodsdef [(
-  greet :-
-    greeting(Greeting),
-    name(Name),
-    formulate_sentence(Greeting, Name, Sentence),
-    writeln(Sentence)
-), (
-  formulate_sentence(Greeting, Name, Sentence) :-
-    format(string(Sentence), "~w, ~w!\n", [Greeting, Name])
-), (
-  formulate(Sentence) :-
-    greeting(Greeting),
-    name(Name),
-    formulate_sentence(Greeting, Name, Sentence)
-)].
+:- class rectangle(protected width, protected height) implements [
+  public constructor(Width, Height) => (
+    width(Width),
+    height(Height)
+  ),
 
-:- classdef person(name, age) methodsdef [(
-  kill :-
-    name(Name),
-    format("~w was killed\n", [Name])
-)].
+  public area(Area) => (
+    width(Width),
+    height(Height),
+    Area is Width * Height
+  )
+].
+
+:- class square(protected size) extends rectangle implements [
+  public constructor(Size) => (
+    width(Size),
+    height(Size)
+  )
+].
 
 start :-
-  Person := person(name="Gabriel", age=12),
-  Person::kill,
-  WorldGreeter := world_greeter(greeting="Good morning", name="Gabriel"),
-  WorldGreeter::formulate(Sentence),
-  writeln(Sentence).
+  Square := square(30),
+  Square::area(Area),
+  writeln(Area).
