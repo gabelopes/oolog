@@ -17,12 +17,11 @@ setup_sandbox(ContextReference) :-
   } :< Context,
   setup_constants(Module, Constants),
   setup_methods(Module, Methods),
-  setup_exports(Module, Exports).
+  setup_exports(Module, Exports), !.
 
 setup_constants(_, []).
 setup_constants(Module, [Constant|Constants]) :-
-  ConstantDeclaration =.. [':', Module, Constant],
-  assertz(ConstantDeclaration),
+  assertz(Module:Constant),
   setup_constants(Module, Constants).
 
 setup_methods(_, []).
@@ -32,8 +31,7 @@ setup_methods(Module, [Method|Methods]) :-
 
 setup_exports(_, []).
 setup_exports(Module, [Export|Exports]) :-
-  ExportStatement =.. [':', Module, export(Export)],
-  call(ExportStatement),
+  call(Module:export(Export)),
   setup_exports(Module, Exports).
 
 teardown_sandbox(ContextReference) :-
@@ -45,7 +43,7 @@ teardown_sandbox(ContextReference) :-
   } :< Context,
   teardown_constants(Module, Constants),
   teardown_methods(Module, Methods),
-  abolish_module_tables(Module).
+  abolish_module_tables(Module), !.
 
 teardown_constants(_, []).
 teardown_constants(Module, [Constant|Constants]) :-

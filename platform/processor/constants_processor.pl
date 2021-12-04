@@ -2,6 +2,8 @@
   get_constant_signature/2
 ]).
 
+:- use_module('../structure/header').
+
 get_constant_signature(Constant, constant(Name, Arity)) :-
-  compound_name_arguments(Constant, Name, Arguments),
+  header(Constant, Name, Arguments),
   length(Arguments, Arity).

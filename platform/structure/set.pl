@@ -9,6 +9,8 @@
   identity/2
 ]).
 
+:- use_module('../structure/header').
+
 create_set(Elements, Mapper, Set) :-
   create_set(Elements, Mapper, Set, _).
 
@@ -37,14 +39,8 @@ map_set(set(Mapper, [Element|Elements]), [MappedElement|MappedElements]) :-
   map_set(set(Mapper, Elements), MappedElements).
 
 map_element(Mapper, Element, MappedElement) :-
-  create_mapper_goal(Mapper, [Element, MappedElement], MapperGoal),
+  header(MapperGoal, Mapper, [Element, MappedElement]),
   call(MapperGoal), !.
-
-create_mapper_goal(Module:GoalName, Arguments, MapperGoal) :-
-  Goal =.. [GoalName|Arguments],
-  MapperGoal =.. [':', Module, Goal].
-create_mapper_goal(GoalName, Arguments, MapperGoal) :-
-  MapperGoal =.. [GoalName|Arguments].
 
 %% Subtracts elements from a given Set, following its mapping policy.
 %  If given Set is not proper, duplicated elements are kept in the Subtraction.

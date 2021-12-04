@@ -1,7 +1,11 @@
 :- module(attributes_processor, [
   get_attribute_signature/2,
   validate_duplicate_attributes/2,
-  find_attributes/3
+  validate_overlapping_attributes/2,
+  find_attributes_by_scope/3,
+  find_attribute_by_name/3,
+  initialize_attributes/2,
+  allocate_attributes/3
 ]).
 
 :- use_module(library(unison)).
@@ -30,7 +34,34 @@ format_repetitions([Repetition|Repetitions], CurrentFormatting, Result) :-
   string_concat(CurrentFormatting, RepetitionFormatting, Formatting),
   format_repetitions(Repetitions, Formatting, Result).
 
-find_attributes(Attributes, Scopes, FoundAttributes) :-
+get_overlapping_attributes(Attributes, SuperClassMethods, OverlappingAttributes) :-
+  findall(Attribute, (
+    member(Attribute, Attributes),
+    member(SuperClassMethod, SuperClassMethods),
+    _{ name: Name, modifiers: _{ scope: Scope }} :<< Attribute,
+    _{ name: Name, arity: 1, modifiers: _{ scope: Scope }} :<< SuperClassMethod
+  ), OverlappingAttributes).
+
+validate_overlapping_attributes(Attributes, SuperClassMethods) :-
+  get_overlapping_attributes(Attributes, SuperClassMethods, OverlappingAttributes),
+  validate_overlapping_attributes(OverlappingAttributes).
+
+validate_overlapping_attributes([]).
+validate_overlapping_attributes(OverlappingAttributes) :-
+  format_overlapping_attributes(OverlappingAttributes, Result),
+  raise_exception("Error declaring class. One or more attributes would overwrite parent methods: ~w", [Result]).
+
+format_overlapping_attributes(OverlappingAttributes, Result) :-
+  format_overlapping_attributes(OverlappingAttributes, "", Result).
+
+format_overlapping_attributes([], Result, Result).
+format_overlapping_attributes([OverlappingAttribute|OverlappingAttributes], CurrentFormatting, Result) :-
+  get_attribute_signature(OverlappingAttribute, attribute(Name, Scope)),
+  format(string(OverlappingAttributeFormatting), "~n - ~w overwrites ~w/1 from parent class (at ~w level)", [Name, Name, Scope]),
+  string_concat(CurrentFormatting, OverlappingAttributeFormatting, Formatting),
+  format_overlapping_attributes(OverlappingAttributes, Formatting, Result).
+
+find_attributes_by_scope(Attributes, Scopes, FoundAttributes) :-
   findall(Attribute, (
     member(Attribute, Attributes),
     attribute{
@@ -40,3 +71,27 @@ find_attributes(Attributes, Scopes, FoundAttributes) :-
     } :<< Attribute,
     member(Scope, Scopes)
   ), FoundAttributes).
+
+find_attribute_by_name(Attributes, Name, Attribute) :-
+  findall(Attribute, (
+    member(Attribute, Attributes),
+    attribute{ name: Name } :< Attribute
+  ), [Attribute]).
+
+initialize_attributes(AttributeDefinitions, Attributes) :-
+  initialize_attributes(AttributeDefinitions, map{}, Attributes).
+
+initialize_attributes([], Attributes, Attributes).
+initialize_attributes([AttributeDefinition|AttributeDefinitions], CurrentAttributes, Attributes) :-
+  attribute{ name: Name, initial_value: InitialValue } :< AttributeDefinition,
+  PartialAttributes = CurrentAttributes.put([Name=InitialValue]),
+  initialize_attributes(AttributeDefinitions, PartialAttributes, Attributes).
+
+allocate_attributes(Reference, AttributeDefinitions, Attributes) :-
+  allocate_attributes(Reference, AttributeDefinitions, map{}, Attributes).
+
+allocate_attributes(_, [], Attributes, Attributes).
+allocate_attributes(Reference, [AttributeDefinition|AttributeDefinitions], CurrentAttributes, Attributes) :-
+  attribute{ name: Name } :< AttributeDefinition,
+  PartialAttributes = CurrentAttributes.put([Name=allocate(Reference)]),
+  allocate_attributes(Reference, AttributeDefinitions, PartialAttributes, Attributes).

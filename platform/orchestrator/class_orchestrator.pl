@@ -8,12 +8,15 @@
 
 :- use_module('../factory/class_factory').
 :- use_module('../manager/class_manager').
+:- use_module('../structure/header').
 
+class(object implements Methods) :-
+  !, load_class(default, object, [], class{ reference: root, attributes: [], methods: [] }, Methods), !.
 class(Header extends (SuperClass implements Methods)) :-
-  compound_name_arguments(Header, Name, Attributes),
-  get_class(SuperClass, SuperClassDefinition),
-  load_class(default, Name, Attributes, SuperClassDefinition, Methods), !. % TODO Add package declarations
+  !, header(Header, Name, Attributes),
+  !, get_class(SuperClass, SuperClassDefinition),
+  !, load_class(default, Name, Attributes, SuperClassDefinition, Methods), !. % TODO Add package declarations
 class(Header implements Methods) :-
-  class Header extends object implements Methods, !.
+  !, class Header extends object implements Methods, !.
 class(Header) :-
-  class Header implements [], !.
+  !, class Header implements [], !.

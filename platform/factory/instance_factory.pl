@@ -7,15 +7,14 @@
 :- use_module('../processor/attributes_processor').
 :- use_module('../manager/class_manager').
 :- use_module('../manager/instance_manager').
-:- use_module('../factory/attribute_factory').
 :- use_module('../factory/accessor_factory').
 :- use_module('../executor/constructor_executor').
 
 instance_class(Name, ConstructorArguments, InstanceReference) :-
   get_class(Name, Class),
   create_instance(Class, InstanceReference, Instance),
-  register_instance(Instance, InstanceReference),
-  invoke_constructor(InstanceReference, ConstructorArguments).
+  register_instance(Instance, InstanceReference), !,
+  invoke_constructor(InstanceReference, ConstructorArguments), !.
 
 create_instance(Class, InstanceReference, instance{
   class: ClassReference,
@@ -25,6 +24,6 @@ create_instance(Class, InstanceReference, instance{
   }
 }) :-
   class{ reference: ClassReference, attributes: AttributeDefinitions } :< Class,
-  find_attributes(AttributeDefinitions, [prototype], PrototypeAttributes),
-  initialize_attributes(PrototypeAttributes, Attributes),
+  find_attributes_by_scope(AttributeDefinitions, [prototype], PrototypeAttributes),
+  allocate_attributes(InstanceReference, PrototypeAttributes, Attributes),
   create_accessors(InstanceReference, PrototypeAttributes, Accessors).

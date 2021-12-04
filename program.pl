@@ -1,28 +1,24 @@
-:- use_module('platform/orchestrator/class_orchestrator').
-:- use_module('platform/orchestrator/instance_orchestrator').
-:- use_module('platform/orchestrator/method_orchestrator').
+:- use_module('oolog/oolog').
 
-:- class rectangle(protected width, protected height) implements [
-  public constructor(Width, Height) => (
-    width(Width),
-    height(Height)
+:- class vector(private coordinates=[0]) implements [
+  public constructor() => true,
+
+  public constructor(Coordinates) => (
+    coordinates(Coordinates)
   ),
 
-  public area(Area) => (
-    width(Width),
-    height(Height),
-    Area is Width * Height
-  )
-].
+  public length(Length) => (
+    coordinates(Coordinates),
+    foldl(sum_squared, Coordinates, 0, SquaredCoordinates),
+    Length is sqrt(SquaredCoordinates)
+  ),
 
-:- class square(protected size) extends rectangle implements [
-  public constructor(Size) => (
-    width(Size),
-    height(Size)
+  private sum_squared(Coordinate, CurrentTotal, Total) => (
+    Total is CurrentTotal + Coordinate^2
   )
 ].
 
 start :-
-  Square := square(30),
-  Square::area(Area),
-  writeln(Area).
+  Vector := vector([15]),
+  Vector::length(Length),
+  writeln(Length).

@@ -13,10 +13,10 @@
 :- use_module(accessor_factory).
 
 load_class(Package, Name, Attributes, SuperClassDefinition, Methods) :-
-  create_class(Package, Name, Attributes, SuperClassDefinition, Methods, Reference, ClassDefinition),
-  register_class(ClassDefinition, Reference).
+  create_class(Package, Name, Attributes, SuperClassDefinition, Methods, ClassReference, ClassDefinition),
+  register_class(ClassDefinition, ClassReference), !.
 
-create_class(Package, Name, AttributeDeclarations, SuperClassDefinition, MethodDeclarations, Reference, class{
+create_class(Package, Name, AttributeDeclarations, SuperClassDefinition, MethodDeclarations, ClassReference, class{
   package: Package,
   name: Name,
   super_class: SuperClassReference,
@@ -35,15 +35,31 @@ create_class(Package, Name, AttributeDeclarations, SuperClassDefinition, MethodD
   } :< SuperClassDefinition,
   create_attributes(AttributeDeclarations, SuperClassAttributes, Attributes),
   create_methods(MethodDeclarations, SuperClassMethods, CombinedMethods),
+  validate_overlapping_attributes(Attributes, SuperClassMethods),
   validate_overlapping_methods(CombinedMethods, Attributes),
-  separate_methods(CombinedMethods, Constructors, Methods),
-  find_attributes(Attributes, [static], ClassAttributes),
+  select_constructors(CombinedMethods, DeclaredConstructors, Methods),
+  add_default_constructor(DeclaredConstructors, Constructors),
+  find_attributes_by_scope(Attributes, [static], ClassAttributes),
   initialize_attributes(ClassAttributes, AttributesData),
-  create_accessors(Reference, ClassAttributes, Accessors).
+  create_accessors(ClassReference, ClassAttributes, Accessors).
 
-separate_methods([], [], []).
-separate_methods([Method|CombinedMethods], [Method|Constructors], Methods) :-
+select_constructors([], [], []).
+select_constructors([Method|CombinedMethods], [Method|Constructors], Methods) :-
   method{ name: constructor } :< Method,
-  separate_methods(CombinedMethods, Constructors, Methods).
-separate_methods([Method|CombinedMethods], Constructors, [Method|Methods]) :-
-  separate_methods(CombinedMethods, Constructors, Methods).
+  select_constructors(CombinedMethods, Constructors, Methods).
+select_constructors([Method|CombinedMethods], Constructors, [Method|Methods]) :-
+  select_constructors(CombinedMethods, Constructors, Methods).
+
+add_default_constructor([], [
+  method{
+    name: constructor,
+    arity: 0,
+    arguments: [],
+    body: true,
+    modifiers: modifiers{
+      scope: prototype,
+      visibility: public
+    }
+  }
+]).
+add_default_constructor(Constructors, Constructors).

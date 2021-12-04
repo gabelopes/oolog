@@ -4,6 +4,7 @@
 
 :- use_module('../operators/reference_operators').
 :- use_module('../factory/context_factory').
+:- use_module('../structure/header').
 
 invoke_method(ObjectReference, Name, Arguments) :-
   setup_call_cleanup(
@@ -13,6 +14,5 @@ invoke_method(ObjectReference, Name, Arguments) :-
   ).
 
 execute_method(&ContextReference, Name, Arguments) :-
-  Head =.. [Name|Arguments],
-  Method =.. [':', ContextReference, Head], !,
+  header(Method, ContextReference:Name, Arguments), !,
   call(Method), !.

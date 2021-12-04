@@ -4,7 +4,8 @@
 ]).
 
 :- use_module('../factory/instance_factory').
+:- use_module('../structure/header').
 
-':='(Reference, Expression) :-
-  compound_name_arguments(Expression, ClassName, Arguments),
-  instance_class(ClassName, Arguments, Reference).
+':='(InstanceReference, Expression) :-
+  header(Expression, ClassName, Arguments), !,
+  instance_class(ClassName, Arguments, InstanceReference), !.

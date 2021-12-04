@@ -5,18 +5,19 @@
 ]).
 
 :- use_module('../operators/reference_operators').
+:- use_module(reference_manager).
 
 :- dynamic context/2.
 
-get_context(&Reference, Context) :-
-  context(Reference, Context).
+get_context(&ContextReference, Context) :-
+  context(ContextReference, Context).
 
-register_context(Context, &Reference) :-
-  uuid(Reference),
+register_context(Context, &ContextReference) :-
+  create_reference(ContextReference),
   UniqueContext = Context.put(_{
-    reference: &Reference
+    reference: &ContextReference
   }),
-  assertz(context(Reference, UniqueContext)).
+  assertz(context(ContextReference, UniqueContext)).
 
-deregister_context(&Reference) :-
-  retractall(context(Reference, _)).
+deregister_context(&ContextReference) :-
+  retractall(context(ContextReference, _)).

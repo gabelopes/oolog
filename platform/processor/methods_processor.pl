@@ -47,7 +47,7 @@ validate_overlapping_methods(Methods, Attributes) :-
 validate_overlapping_methods([]).
 validate_overlapping_methods(OverlappingMethods) :-
   format_overlapping_methods(OverlappingMethods, Result),
-  raise_exception("Methods clashing with attributes found in class: ~w", [Result]).
+  raise_exception("Error declaring class. One or more methods would overwrite defined attributes: ~w", [Result]).
 
 format_overlapping_methods(OverlappingMethods, Result) :-
   format_overlapping_methods(OverlappingMethods, "", Result).
@@ -55,7 +55,7 @@ format_overlapping_methods(OverlappingMethods, Result) :-
 format_overlapping_methods([], Result, Result).
 format_overlapping_methods([OverlappingMethod|OverlappingMethods], CurrentFormatting, Result) :-
   get_method_signature(OverlappingMethod, method(Name, Arity, Scope)),
-  format(string(OverlappingMethodFormatting), "~n - ~w/~w, ~w (~w)", [Name, Arity, Name, Scope]),
+  format(string(OverlappingMethodFormatting), "~n - ~w/~w overwrites ~w (at ~w level)", [Name, Arity, Name, Scope]),
   string_concat(CurrentFormatting, OverlappingMethodFormatting, Formatting),
   format_overlapping_methods(OverlappingMethods, Formatting, Result).
 

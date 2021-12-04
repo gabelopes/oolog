@@ -7,11 +7,12 @@
 
 :- use_module('../operators/reference_operators').
 :- use_module('../io/console').
+:- use_module(reference_manager).
 
 :- dynamic class/2.
 
-get_class(&Reference, ClassDefinition) :-
-  class(Reference, ClassDefinition).
+get_class(&ClassReference, ClassDefinition) :-
+  !, class(ClassReference, ClassDefinition).
 
 get_class(Package:Name, ClassDefinition) :-
   !, class(_, ClassDefinition),
@@ -22,31 +23,23 @@ get_class(Name, ClassDefinition) :-
 register_class(ClassDefinition) :-
   register_class(ClassDefinition, _).
 
-register_class(ClassDefinition, &Reference) :-
+register_class(ClassDefinition, &ClassReference) :-
   \+ exists_class(ClassDefinition),
-  uuid(Reference),
+  create_reference(ClassReference),
   UniqueClassDefinition = ClassDefinition.put(_{
-    reference: &Reference
+    reference: &ClassReference
   }),
-  assertz(class(Reference, UniqueClassDefinition)).
+  assertz(class(ClassReference, UniqueClassDefinition)).
 
 exists_class(ClassDefinition) :-
   class{ package: Package, name: Name } :< ClassDefinition,
   get_class(Package:Name, _).
 
 update_class(UpdatedClass) :-
-  class{ reference: &Reference } :< UpdatedClass,
-  class(Reference, _),
-  retractall(class(Reference, _)),
-  assertz(class(Reference, UpdatedClass)).
+  class{ reference: &ClassReference } :< UpdatedClass,
+  class(ClassReference, _),
+  retractall(class(ClassReference, _)),
+  assertz(class(ClassReference, UpdatedClass)).
 update_class(UpdatedClass) :-
   class{ package: Package, name: Name } :< UpdatedClass,
   write_warning("Could not update reference for class ~w:~w. No reference found.~n", [Package, Name]).
-
-% Must be declared by Platform
-:- register_class(class{
-  package: default,
-  name: object,
-  attributes: [],
-  methods: []
-}).

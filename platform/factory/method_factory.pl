@@ -9,6 +9,7 @@
 :- use_module('../processor/modifiers_processor').
 :- use_module('../lifecycle/exception').
 :- use_module('../structure/set').
+:- use_module('../structure/header').
 
 create_methods(MethodDeclarations, SuperClassMethods, Methods) :-
   define_methods(MethodDeclarations, ClassMethods),
@@ -29,7 +30,7 @@ define_methods([MethodExpression|MethodExpressions], [method{
   define_methods(MethodExpressions, MethodDefinitions).
 
 extract_method(Header => Body, Name, Arguments, Body) :-
-  compound_name_arguments(Header, Name, Arguments).
+  header(Header, Name, Arguments).
 
 overwrite_methods(Methods, [], Methods).
 overwrite_methods([], _, []).

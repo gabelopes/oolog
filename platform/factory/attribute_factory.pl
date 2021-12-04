@@ -1,6 +1,5 @@
 :- module(attribute_factory, [
-  create_attributes/3,
-  initialize_attributes/2
+  create_attributes/3
 ]).
 
 :- use_module(library(unison)).
@@ -26,7 +25,7 @@ define_attributes([AttributeExpression|AttributeExpressions], [attribute{
   define_attributes(AttributeExpressions, AttributeDefinitions).
 
 extract_attribute(Name=InitialValue, Name, InitialValue).
-extract_attribute(Name, Name, unset/allocate).
+extract_attribute(Name, Name, none).
 
 overwrite_attributes(Attributes, [], Attributes).
 overwrite_attributes([], _, []).
@@ -60,13 +59,3 @@ merge_attributes(Attributes, BaseAttributes, MergedAttributes) :-
   create_set(Attributes, attributes_processor:get_attribute_signature, AttributeSet, DifferentialSet),
   validate_duplicate_attributes(Attributes, DifferentialSet),
   merge_set(AttributeSet, BaseAttributes, set(_, MergedAttributes)).
-
-% Attribute Initialization
-initialize_attributes(AttributeDefinitions, Attributes) :-
-  initialize_attributes(AttributeDefinitions, map{}, Attributes).
-
-initialize_attributes([], Attributes, Attributes).
-initialize_attributes([AttributeDefinition|AttributeDefinitions], CurrentAttributes, Attributes) :-
-  attribute{ name: Name, initial_value: InitialValue } :< AttributeDefinition,
-  PartialAttributes = CurrentAttributes.put([Name=InitialValue]),
-  initialize_attributes(AttributeDefinitions, PartialAttributes, Attributes).
