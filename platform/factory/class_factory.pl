@@ -53,7 +53,7 @@ select_constructors([Method|CombinedMethods], Constructors, [Method|Methods]) :-
 add_default_constructor([], [
   method{
     name: constructor,
-    arity: 0,
+    arity: arity(0, static),
     arguments: [],
     body: true,
     modifiers: modifiers{

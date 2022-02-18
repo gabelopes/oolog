@@ -90,5 +90,9 @@ select_methods(AvailableMethods, [_|Includes], Methods) :-
 
 create_exports([], []).
 create_exports([Method|Methods], [Name/Arity|Exports]) :-
-  method{ name: Name, arity: Arity } :< Method,
+  method{ name: Name, arity: arity(Arity, static) } :< Method,
+  create_exports(Methods, Exports).
+create_exports([Method|Methods], [Name/Arity|Exports]) :-
+  method{ name: Name, arity: arity(StaticArity, variable) } :< Method,
+  Arity is StaticArity + 1,
   create_exports(Methods, Exports).

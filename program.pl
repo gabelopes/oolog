@@ -19,6 +19,6 @@
 ].
 
 start :-
-  Vector := vector([15]),
+  Vector := vector([15, 10, 34]),
   Vector::length(Length),
   writeln(Length).

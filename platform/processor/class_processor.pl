@@ -4,6 +4,7 @@
 ]).
 
 :- use_module(library(unison)).
+:- use_module('../processor/arity_processor').
 
 find_constructor(ClassDefinition, Arity, Constructor) :-
   find_constructor(ClassDefinition, [public, protected, private], Arity, Constructor).
@@ -13,9 +14,10 @@ find_constructor(ClassDefinition, Visibilities, Arity, Constructor) :-
   member(Constructor, Constructors),
   method{
     name: constructor,
-    arity: Arity,
+    arity: ConstructorArity,
     modifiers: modifiers{
       visibility: Visibility
     }
   } :<< Constructor,
-  member(Visibility, Visibilities).
+  member(Visibility, Visibilities),
+  Arity >@< ConstructorArity.

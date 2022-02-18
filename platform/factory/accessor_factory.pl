@@ -8,7 +8,7 @@ create_accessors(_, [], []).
 create_accessors(Reference, [AttributeDefinition|AttributeDefinitions], [method{
   modifiers: Modifiers,
   name: Name,
-  arity: 1,
+  arity: (1, static),
   arguments: [Value],
   body: (
     accessor_processor:access_attribute(Reference, Name, Value)

@@ -10,6 +10,7 @@
 :- use_module('../lifecycle/exception').
 :- use_module('../structure/set').
 :- use_module('../structure/header').
+:- use_module('../processor/arity_processor').
 
 create_methods(MethodDeclarations, SuperClassMethods, Methods) :-
   define_methods(MethodDeclarations, ClassMethods),
@@ -26,11 +27,33 @@ define_methods([MethodExpression|MethodExpressions], [method{
 }|MethodDefinitions]) :-
   extract_modifiers(method, MethodExpression, declaration(Modifiers, MethodDeclaration)),
   extract_method(MethodDeclaration, Name, Arguments, Body),
-  length(Arguments, Arity),
+  calculate_arity(Arguments, Arity),
   define_methods(MethodExpressions, MethodDefinitions).
 
 extract_method(Header => Body, Name, Arguments, Body) :-
   header(Header, Name, Arguments).
+
+calculate_arity(Arguments, Arity) :-
+  get_static_arguments(Arguments, StaticArguments),
+  calculate_arity(Arguments, StaticArguments, Arity).
+
+get_static_arguments([], []).
+get_static_arguments([Argument|Arguments], StaticArguments) :-
+  Argument =@= _...,
+  get_static_arguments(Arguments, StaticArguments).
+get_static_arguments([Argument|Arguments], [Argument|StaticArguments]) :-
+  get_static_arguments(Arguments, StaticArguments).
+
+calculate_arity(Arguments, StaticArguments, _) :-
+  length(Arguments, ArgumentsLength),
+  length(StaticArguments, StaticArgumentsLength),
+  StaticArgumentsLength < ArgumentsLength - 1,
+  raise_exception("Multiple variable arity arguments found in ~w", [Arguments]).
+calculate_arity(Arguments, StaticArguments, arity(Length, static)) :-
+  length(Arguments, Length),
+  length(StaticArguments, Length).
+calculate_arity(_, StaticArguments, arity(Length, variable)) :-
+  length(StaticArguments, Length).
 
 overwrite_methods(Methods, [], Methods).
 overwrite_methods([], _, []).
@@ -43,10 +66,11 @@ overwrite_method(Method, BaseMethods, Method) :-
   validate_overwrite(Method, BaseMethod).
 overwrite_method(Method, _, Method).
 
-find_method(Method, BaseMethods, FoundMethod) :-
-  member(FoundMethod, BaseMethods),
-  _{ name: Name, arity: Arity, modifiers: _{ scope: Scope }} :<< Method,
-  _{ name: Name, arity: Arity, modifiers: _{ scope: Scope }} :<< FoundMethod.
+find_method(Method, BaseMethods, BaseMethod) :-
+  member(BaseMethod, BaseMethods),
+  _{ name: Name, arity: MethodArity, modifiers: _{ scope: Scope }} :<< Method,
+  _{ name: Name, arity: BaseMethodArity, modifiers: _{ scope: Scope }} :<< BaseMethod,
+  MethodArity >@< BaseMethodArity.
 
 validate_overwrite(Method, BaseMethod) :-
   _{ modifiers: _{ visibility: MethodVisibility }} :<< Method,

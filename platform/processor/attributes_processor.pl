@@ -11,6 +11,7 @@
 :- use_module(library(unison)).
 :- use_module('../structure/set').
 :- use_module('../lifecycle/exception').
+:- use_module('../processor/arity_processor').
 
 get_attribute_signature(Attribute, attribute(Name, Scope)) :-
   _{ name: Name, modifiers: _{ scope: Scope }} :<< Attribute.
@@ -39,7 +40,8 @@ get_overlapping_attributes(Attributes, SuperClassMethods, OverlappingAttributes)
     member(Attribute, Attributes),
     member(SuperClassMethod, SuperClassMethods),
     _{ name: Name, modifiers: _{ scope: Scope }} :<< Attribute,
-    _{ name: Name, arity: 1, modifiers: _{ scope: Scope }} :<< SuperClassMethod
+    _{ name: Name, arity: Arity, modifiers: _{ scope: Scope }} :<< SuperClassMethod,
+    Arity >@< 1
   ), OverlappingAttributes).
 
 validate_overlapping_attributes(Attributes, SuperClassMethods) :-
